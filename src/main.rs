@@ -1,8 +1,8 @@
 mod myclap;
 
 use chrono::{DateTime, Utc};
-use core::fmt;
 use myclap::{BumpArgs, Command, ViewArgs};
+use ordered_float::NotNan;
 use serde::{Deserialize, Serialize};
 use std::{
     collections::hash_map::HashMap,
@@ -44,7 +44,7 @@ fn run_view(args: &ViewArgs) -> Result<()> {
             tbl.augment(&lines);
         }
         if args.restrict {
-            tbl.restrict(&lines);
+            tbl = tbl.restrict(&lines);
         }
     }
     let w = Weights {
@@ -53,7 +53,7 @@ fn run_view(args: &ViewArgs) -> Result<()> {
         monthly: args.monthly,
     };
     let mut writer = BufWriter::new(std::io::stdout().lock());
-    tbl.view(w, &mut writer)?;
+    tbl.view(w, args.scores, &mut writer)?;
     Ok(())
 }
 
@@ -62,8 +62,8 @@ enum FreqleError {
     // TODO: take the path as an argument
     StrictFileMissing,
     IOError(io::Error),
-    FmtError(fmt::Error),
     BinError(bincode::Error),
+    NumError,
 }
 
 type Result<T> = std::result::Result<T, FreqleError>;
@@ -181,22 +181,48 @@ impl Table {
         tbl
     }
 
-    pub fn bump(&mut self, key: &String) {
+    pub fn bump(&mut self, key: &str) {
         self.energies
-            .entry(key.clone()) // TODO don't clone
+            .entry(key.to_owned()) // TODO don't clone
             .and_modify(|erg| *erg += 1.0)
             .or_insert(Energies::new(1.0));
     }
 
-    pub fn view<W: Write>(self, weights: Weights, tgt: &mut W) -> Result<()> {
-        let mut entries: Vec<(&String, f64)> = self
+    pub fn view<W: Write>(self, weights: Weights, scores: bool, tgt: &mut W) -> Result<()> {
+        let mut entries: Vec<(&String, &TVec3, f64)> = self
             .energies
             .iter()
-            .map(|(k, v)| (k, weights.dot(*v)))
+            .map(|(k, v)| (k, v, weights.dot(*v)))
             .collect();
-        entries.sort_by(|(_, v1), (_, v2)| v1.partial_cmp(v2).unwrap()); // TODO NotNan float
-        for (k, _) in entries {
-            writeln!(tgt, "{}", k).map_err(FreqleError::IOError)?;
+        for (_, _, erg) in &entries {
+            if erg.is_nan() {
+                return Err(FreqleError::NumError);
+            }
+        }
+        entries.sort_by_key(|(_, _, erg)| -NotNan::new(*erg).unwrap()); // TODO NotNan float
+        if scores {
+            writeln!(tgt, "weighted score\thourly\t\tdaily\t\tmonthly")
+                .map_err(FreqleError::IOError)?;
+            for (
+                k,
+                TVec3 {
+                    hourly,
+                    daily,
+                    monthly,
+                },
+                score,
+            ) in entries
+            {
+                writeln!(
+                    tgt,
+                    "{score:12.6}\t{hourly:10.6}\t{daily:10.6}\t{monthly:10.6}\t{k}"
+                )
+                .map_err(FreqleError::IOError)?;
+            }
+        } else {
+            for (k, _, _) in entries {
+                writeln!(tgt, "{}", k).map_err(FreqleError::IOError)?;
+            }
         }
         Ok(())
     }
