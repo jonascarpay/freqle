@@ -6,7 +6,7 @@ use ordered_float::NotNan;
 use serde::{Deserialize, Serialize};
 use std::{
     collections::hash_map::HashMap,
-    fmt::{Debug, Display},
+    fmt::Debug,
     fs::{File, OpenOptions},
     io::{self, BufRead, BufReader, BufWriter, Write},
     ops,
@@ -21,7 +21,17 @@ fn main() {
         Command::Delete(args) => run_delete(args),
     };
     if let Err(err) = res {
-        eprintln!("{}", err);
+        let path = cmd.get_path();
+        match err {
+            FreqleError::StrictFileMissing => {
+                println!("Error: File {path:?} missing in --strict mode")
+            }
+            FreqleError::IOError(err) => eprintln!("IO error while reading {path:?}: {err}"),
+            FreqleError::BinError(err) => eprintln!("Binary format error in {path:?}: {err}"),
+            FreqleError::NumError => {
+                eprintln!("Error: unexpected NaN! Please open a bug report.")
+            }
+        }
         std::process::exit(1);
     }
 }
@@ -67,27 +77,12 @@ fn run_delete(args: &DeleteArgs) -> Result<()> {
     tbl.write(&args.path)
 }
 
-#[derive(Debug)]
 enum FreqleError {
-    // TODO: take the path as an argument
     StrictFileMissing,
     IOError(io::Error),
     BinError(bincode::Error),
     NumError,
 }
-
-impl Display for FreqleError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            FreqleError::StrictFileMissing => f.write_str("Error: File missing in --strict mode"),
-            FreqleError::IOError(err) => Display::fmt(err, f),
-            FreqleError::BinError(err) => Display::fmt(err, f),
-            FreqleError::NumError => f.write_str("Error: NaN! Please open a bug report."),
-        }
-    }
-}
-
-impl std::error::Error for FreqleError {}
 
 type Result<T> = std::result::Result<T, FreqleError>;
 

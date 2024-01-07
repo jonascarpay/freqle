@@ -18,6 +18,16 @@ pub enum Command {
     Delete(DeleteArgs),
 }
 
+impl Command {
+    pub fn get_path(&self) -> &PathBuf {
+        match self {
+            Command::Bump(args) => &args.path,
+            Command::View(args) => &args.path,
+            Command::Delete(args) => &args.path,
+        }
+    }
+}
+
 #[derive(Debug, clap::Args)]
 pub struct BumpArgs {
     /// History file path
