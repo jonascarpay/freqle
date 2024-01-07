@@ -1,6 +1,6 @@
 {
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/release-23.05";
+    nixpkgs.url = "github:NixOS/nixpkgs/release-23.11";
     rust-overlay.url = "github:oxalica/rust-overlay";
     mkflake.url = "github:jonascarpay/mkflake";
   };
@@ -12,10 +12,15 @@
     };
     perSystem = system:
       let
-        pkgs = import nixpkgs { inherit system; overlays = [ rust-overlay.overlay ]; };
+        pkgs = import nixpkgs { inherit system; overlays = [ rust-overlay.overlays.default ]; };
         rust = pkgs.rust-bin.selectLatestNightlyWith
           (toolchain: toolchain.default.override {
-            extensions = [ "rust-analyzer" ];
+            extensions = [
+              "rust-analyzer"
+              "clippy"
+              "rustfmt"
+              "rust-src"
+            ];
           });
       in
       {
