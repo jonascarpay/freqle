@@ -1,23 +1,28 @@
 mod myclap;
 
 use chrono::{DateTime, Utc};
-use myclap::{BumpArgs, Command, ViewArgs};
+use myclap::{BumpArgs, Command, DeleteArgs, ViewArgs};
 use ordered_float::NotNan;
 use serde::{Deserialize, Serialize};
 use std::{
     collections::hash_map::HashMap,
+    fmt::{Debug, Display},
     fs::{File, OpenOptions},
     io::{self, BufRead, BufReader, BufWriter, Write},
     ops,
     path::PathBuf,
 };
 
-fn main() -> Result<()> {
+fn main() {
     let cmd = myclap::parse_args();
-    match &cmd {
+    let res = match &cmd {
         Command::Bump(args) => run_bump(args),
         Command::View(args) => run_view(args),
-        Command::Delete(_) => todo!(),
+        Command::Delete(args) => run_delete(args),
+    };
+    if let Err(err) = res {
+        eprintln!("{}", err);
+        std::process::exit(1);
     }
 }
 
@@ -29,8 +34,7 @@ fn run_bump(args: &BumpArgs) -> Result<()> {
         None => (),
     }
     tbl.expire(args.threshold);
-    tbl.write(&args.path)?;
-    Ok(())
+    tbl.write(&args.path)
 }
 
 fn run_view(args: &ViewArgs) -> Result<()> {
@@ -57,6 +61,12 @@ fn run_view(args: &ViewArgs) -> Result<()> {
     Ok(())
 }
 
+fn run_delete(args: &DeleteArgs) -> Result<()> {
+    let mut tbl = Table::load(&args.path, args.strict)?;
+    tbl.delete(&args.key);
+    tbl.write(&args.path)
+}
+
 #[derive(Debug)]
 enum FreqleError {
     // TODO: take the path as an argument
@@ -65,6 +75,19 @@ enum FreqleError {
     BinError(bincode::Error),
     NumError,
 }
+
+impl Display for FreqleError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            FreqleError::StrictFileMissing => f.write_str("Error: File missing in --strict mode"),
+            FreqleError::IOError(err) => Display::fmt(err, f),
+            FreqleError::BinError(err) => Display::fmt(err, f),
+            FreqleError::NumError => f.write_str("Error: NaN! Please open a bug report."),
+        }
+    }
+}
+
+impl std::error::Error for FreqleError {}
 
 type Result<T> = std::result::Result<T, FreqleError>;
 
@@ -225,6 +248,10 @@ impl Table {
             }
         }
         Ok(())
+    }
+
+    fn delete(&mut self, key: &str) {
+        self.energies.remove(key);
     }
 
     fn load(p: &PathBuf, strict: bool) -> Result<Table> {
