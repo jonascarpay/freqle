@@ -12,8 +12,16 @@
     };
     perSystem = system:
       let
-        pkgs = import nixpkgs { inherit system; overlays = [ rust-overlay.overlays.default ]; };
-        rust = pkgs.rust-bin.selectLatestNightlyWith
+        pkgs = import nixpkgs {
+          inherit system;
+          overlays = [
+            rust-overlay.overlays.default
+            (final: prev: {
+              freqle = final.callPackage freqle-pkg { };
+            })
+          ];
+        };
+        rust-env = pkgs.rust-bin.selectLatestNightlyWith
           (toolchain: toolchain.default.override {
             extensions = [
               "rust-analyzer"
@@ -25,12 +33,27 @@
               "x86_64-unknown-linux-musl"
             ];
           });
+
+
+        freqle-pkg = { rustPlatform }: rustPlatform.buildRustPackage {
+          pname = "freqle";
+          version = "0.1";
+          src = ./.;
+          # cargoHash = "sha256-qqmTfmsLDTpU2Dsz+wUD4mFjWE0vm4F/wW2J21HYuWs=";
+          cargoLock.lockFile = ./Cargo.lock;
+        };
       in
       {
         devShells.default = pkgs.mkShell {
           packages = [
-            rust
+            rust-env
           ];
+        };
+        packages = rec {
+          default = freqle;
+          freqle = pkgs.freqle;
+          freqle-static = pkgs.pkgsStatic.freqle;
+
         };
       };
   };
