@@ -1,6 +1,6 @@
 {
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/release-23.11";
+    nixpkgs.url = "github:NixOS/nixpkgs/release-24.05";
     rust-overlay.url = "github:oxalica/rust-overlay";
     mkflake.url = "github:jonascarpay/mkflake";
   };
