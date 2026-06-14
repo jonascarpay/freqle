@@ -3,6 +3,13 @@ name = "freqle"
 authors = ["Jonas Carpay"]
 version = "0.1.0"
 edition = "2021"
+description = "Extremely simple CLI tool for maintaining a frecency history"
+license = "MIT"
+repository = "https://github.com/jonascarpay/freqle"
+homepage = "https://github.com/jonascarpay/freqle"
+readme = "README.md"
+keywords = ["frecency", "cli", "history", "dmenu", "fzf"]
+categories = ["command-line-utilities"]
 
 [dependencies]
 bincode = "1.3.3"
