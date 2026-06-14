@@ -1,6 +1,5 @@
 mod myclap;
 
-use chrono::{DateTime, Utc};
 use myclap::{BumpArgs, Command, DeleteArgs, ViewArgs};
 use serde::{Deserialize, Serialize};
 use std::{
@@ -9,7 +8,16 @@ use std::{
     io::{self, BufRead, BufReader, BufWriter, Write},
     ops,
     path::PathBuf,
+    time::{SystemTime, UNIX_EPOCH},
 };
+
+/// Current wall-clock time as seconds since the Unix epoch.
+fn now_secs() -> f64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|d| d.as_secs_f64())
+        .unwrap_or(0.0)
+}
 
 fn main() {
     let cmd = myclap::parse_args();
@@ -142,14 +150,15 @@ impl ops::MulAssign for TVec3 {
 
 #[derive(Serialize, Deserialize, Debug)]
 struct Table {
-    last_update: DateTime<Utc>,
+    /// Time of the last decay, as seconds since the Unix epoch.
+    last_update: f64,
     energies: HashMap<String, Energies>,
 }
 
 impl Table {
     pub fn new() -> Table {
         Table {
-            last_update: Utc::now(),
+            last_update: now_secs(),
             energies: HashMap::new(),
         }
     }
@@ -159,8 +168,8 @@ impl Table {
     }
 
     pub fn decay(&mut self) {
-        let now = Utc::now();
-        let delta_sec = (now - self.last_update).num_seconds() as f64;
+        let now = now_secs();
+        let delta_sec = now - self.last_update;
         let half_lives_sec = TVec3 {
             hourly: 3600.0,
             daily: 24.0 * 3600.0,
