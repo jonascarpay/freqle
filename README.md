@@ -1,5 +1,7 @@
 # freqle
 
+[![crates.io](https://img.shields.io/crates/v/freqle.svg)](https://crates.io/crates/freqle)
+
 Extremely simple CLI tool for maintaining a [frecency](https://en.wikipedia.org/wiki/Frecency) history.
 This is a Rust port of [frecently](https://github.com/jonascarpay/frecently).
 
@@ -84,6 +86,14 @@ end
 ```
 
 ### Installation
+
+#### From crates.io
+
+`freqle` is published on [crates.io](https://crates.io/crates/freqle), so you can install it with:
+
+```console
+$ cargo install freqle
+```
 
 #### Compiling from source
 
