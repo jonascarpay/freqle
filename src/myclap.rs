@@ -42,7 +42,7 @@ pub struct BumpArgs {
     #[arg(short, long, default_value_t = 0.1, value_name = "NUM")]
     pub threshold: f64,
 
-    /// Throw an error if the target file does not exist, instead of createing a new file.
+    /// Throw an error if the target file does not exist, instead of creating a new file.
     #[arg(short = 'e', long = "strict")]
     pub strict: bool,
 }
@@ -80,7 +80,7 @@ pub struct ViewArgs {
     pub scores: bool,
 
     /// Throw an error if the target file does not exist, instead of creating a new file.
-    #[arg(short, long, value_name = "NUM")]
+    #[arg(short = 'e', long = "strict")]
     pub strict: bool,
 }
 
@@ -92,8 +92,8 @@ pub struct DeleteArgs {
     /// Entry to delete.
     pub key: String,
 
-    /// Throw an error if the target file does not exist, instead of createing a new file.
-    #[arg(short = 'e', long = "strict", value_name = "NUM")]
+    /// Throw an error if the target file does not exist, instead of creating a new file.
+    #[arg(short = 'e', long = "strict")]
     pub strict: bool,
 }
 

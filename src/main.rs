@@ -6,7 +6,6 @@ use ordered_float::NotNan;
 use serde::{Deserialize, Serialize};
 use std::{
     collections::hash_map::HashMap,
-    fmt::Debug,
     fs::{File, OpenOptions},
     io::{self, BufRead, BufReader, BufWriter, Write},
     ops,
@@ -39,9 +38,8 @@ fn main() {
 fn run_bump(args: &BumpArgs) -> Result<()> {
     let mut tbl = Table::load(&args.path, args.strict)?;
     tbl.decay();
-    match &args.key {
-        Some(key) => tbl.bump(key),
-        None => (),
+    if let Some(key) = &args.key {
+        tbl.bump(key);
     }
     tbl.expire(args.threshold);
     tbl.write(&args.path)
