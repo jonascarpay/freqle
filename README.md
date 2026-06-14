@@ -28,8 +28,8 @@ foo
 baz
 $ echo -e "foo\nbar\nbaz" | freqle view .history --augment --scores   # --scores allows us to inspect the internal state
 weighted score	hourly		daily		monthly
-  842.000000	  2.000000	  2.000000	  2.000000	bar
-  421.000000	  1.000000	  1.000000	  1.000000	foo
+  841.537071	  1.998845	  1.999952	  1.999998	bar
+  420.768536	  0.999423	  0.999976	  0.999999	foo
     0.000000	  0.000000	  0.000000	  0.000000	baz
 $ echo -e "bar\nbaz" | freqle view .history --augment --restrict  # with --restrict, we exclusively output entries that appear on stdin
 bar
