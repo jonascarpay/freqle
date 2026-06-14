@@ -38,12 +38,12 @@ pub struct BumpArgs {
     pub key: Option<String>,
 
     /// Expiration threshold.
-    /// Entries with a monthly energy below this threshold are pured from the file.
+    /// Entries with a monthly energy below this threshold are purged from the file.
     #[arg(short, long, default_value_t = 0.1, value_name = "NUM")]
     pub threshold: f64,
 
     /// Throw an error if the target file does not exist, instead of createing a new file.
-    #[arg(short = 'e', long = "strict", value_name = "NUM")]
+    #[arg(short = 'e', long = "strict")]
     pub strict: bool,
 }
 
