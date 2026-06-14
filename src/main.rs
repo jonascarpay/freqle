@@ -260,12 +260,19 @@ impl Table {
     }
 
     fn write(&self, p: &PathBuf) -> Result<()> {
+        let mut tmp = p.clone();
+        let mut name = tmp.file_name().unwrap_or_default().to_os_string();
+        name.push(format!(".tmp.{}", std::process::id()));
+        tmp.set_file_name(name);
+
         let file = OpenOptions::new()
             .write(true)
             .create(true)
             .truncate(true)
-            .open(p)
+            .open(&tmp)
             .map_err(FreqleError::IOError)?;
-        bincode::serialize_into(file, self).map_err(FreqleError::BinError)
+        bincode::serialize_into(&file, self).map_err(FreqleError::BinError)?;
+        file.sync_all().map_err(FreqleError::IOError)?;
+        std::fs::rename(&tmp, p).map_err(FreqleError::IOError)
     }
 }
