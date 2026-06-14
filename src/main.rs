@@ -2,7 +2,6 @@ mod myclap;
 
 use chrono::{DateTime, Utc};
 use myclap::{BumpArgs, Command, DeleteArgs, ViewArgs};
-use ordered_float::NotNan;
 use serde::{Deserialize, Serialize};
 use std::{
     collections::hash_map::HashMap,
@@ -213,7 +212,8 @@ impl Table {
                 return Err(FreqleError::NumError);
             }
         }
-        entries.sort_by_key(|(_, _, erg)| -NotNan::new(*erg).unwrap()); // TODO NotNan float
+        // NaN scores are rejected above
+        entries.sort_by(|a, b| b.2.total_cmp(&a.2));
         if scores {
             writeln!(tgt, "weighted score\thourly\t\tdaily\t\tmonthly")
                 .map_err(FreqleError::IOError)?;
