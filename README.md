@@ -18,6 +18,7 @@ For more detailed information, run `freqle --help`.
 $ freqle view .history      # .history doesn't exist yet. By default, all commands treat a missing file as empty
 $ freqle bump .history foo  # creates .history, and bumps foo
 $ freqle bump .history bar
+$ freqle bump .history bar  # bump bar a second time, so it outranks foo
 $ freqle view .history      # `view` shows all entries, ordered by frecency
 bar
 foo
@@ -26,10 +27,10 @@ bar
 foo
 baz
 $ echo -e "foo\nbar\nbaz" | freqle view .history --augment --scores   # --scores allows us to inspect the internal state
-weighted score  hourly          daily           monthly
-  178.663539      0.985473        0.999390        0.999980      bar
-  178.267277      0.983010        0.999286        0.999976      foo
-    0.000000      0.000000        0.000000        0.000000      baz
+weighted score	hourly		daily		monthly
+  842.000000	  2.000000	  2.000000	  2.000000	bar
+  421.000000	  1.000000	  1.000000	  1.000000	foo
+    0.000000	  0.000000	  0.000000	  0.000000	baz
 $ echo -e "bar\nbaz" | freqle view .history --augment --restrict  # with --restrict, we exclusively output entries that appear on stdin
 bar
 baz
@@ -77,36 +78,30 @@ This kind of script is especially useful when combined with a shell hook that bu
 For `fish`, that looks like this:
 
 ```fish
-function __frecently-directory-hook --on-variable PWD --description 'bump current directory in history'
+function __freqle-directory-hook --on-variable PWD --description 'bump current directory in history'
   freqle bump /path/to/history/file "$PWD"
 end
 ```
 
 ### Installation
 
-#### Binaries
-
-The [GitHub Action CI](https://github.com/jonascarpay/freqle/actions) builds static binaries for x86 and aarch64, so look for artifacts on the most recent action.
-If this project gains traction (stars) I'll add proper releases so the artifacts don't get deleted after 90 days.
-
-`freqle` is also available on [Hackage](http://hackage.haskell.org/package/frecently), so depending on your distro you might be able to install straight from there.
-
 #### Compiling from source
 
-`frecently` can be built using a Haskell build tool, or using Nix.
+`freqle` can be built using Cargo, or using Nix.
 
-Using Cabal, run `cabal build`.
+Using Cargo, run `cargo build --release`; the binary ends up in `target/release/freqle`.
 
 Using Nix, the `flake.nix` file exposes the executable both directly and as an overlay.
+It also provides a fully static build via the `freqle-static` package (`nix build .#freqle-static`).
 
 ### Implementation details
 
-`frecently` works by maintaining three energy levels per entry.
+`freqle` works by maintaining three energy levels per entry.
 The energy levels decay exponentially, with half-lives of an hour, a day, and a month, respectively.
 We `bump` an entry by adding 1 to each of these.
 
 An entry's frecency score is calculated by multiplying each of these three energies by a weight.
-The weights default to 720, 30, and 1, for the hourly, daily, and monthly energies, respectively, but can be overridden on the CLI.
+The weights default to 400, 20, and 1, for the hourly, daily, and monthly energies, respectively, but can be overridden on the CLI.
 
 Energies are updated _only_ when the history file is used in a `bump` command, and when we do, we update every entry's energy simultaneously.
 This is invisible to the user, but it ensures that we only need to calculate decay factors once when opening a file, making score calculations very efficient.
