@@ -1,6 +1,6 @@
 [package]
 name = "freqle"
-author = "Jonas Carpay"
+authors = ["Jonas Carpay"]
 version = "0.1.0"
 edition = "2021"
 
