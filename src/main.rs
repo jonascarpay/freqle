@@ -24,7 +24,7 @@ fn main() {
         let path = cmd.get_path();
         match err {
             FreqleError::StrictFileMissing => {
-                println!("Error: File {path:?} missing in --strict mode")
+                eprintln!("Error: File {path:?} missing in --strict mode")
             }
             FreqleError::IOError(err) => eprintln!("IO error while reading {path:?}: {err}"),
             FreqleError::BinError(err) => eprintln!("Binary format error in {path:?}: {err}"),
