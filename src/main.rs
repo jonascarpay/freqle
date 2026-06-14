@@ -178,11 +178,9 @@ impl Table {
 
     pub fn augment(&mut self, entries: &Vec<String>) {
         for entry in entries {
-            // TODO ONLY IF NOT PRESENT
-            self.energies.insert(
-                entry.clone(), // TODO don't clone
-                Energies::new(0.0),
-            );
+            self.energies
+                .entry(entry.clone()) // TODO don't clone
+                .or_insert(Energies::new(0.0));
         }
     }
 

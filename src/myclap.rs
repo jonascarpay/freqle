@@ -79,7 +79,7 @@ pub struct ViewArgs {
     #[arg(long)]
     pub scores: bool,
 
-    /// Throw an error if the target file does not exist, instead of createing a new file.
+    /// Throw an error if the target file does not exist, instead of creating a new file.
     #[arg(short, long, value_name = "NUM")]
     pub strict: bool,
 }
